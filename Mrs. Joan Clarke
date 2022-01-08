@@ -1,0 +1,144 @@
+import pyttsx3
+import speech_recognition as sr
+import webbrowser
+import datetime
+import wikipedia
+import pywhatkit
+import face_recognition
+import face_recognition
+import cv2
+import numpy as np
+import time
+
+video_capture = cv2.VideoCapture(0)
+owner_image = face_recognition.load_image_file("WIN_20220107_08_19_42_Pro.jpg")
+owner_face_encoding = face_recognition.face_encodings(owner_image)[0]
+known_face_encodings = [
+    owner_face_encoding,
+]
+known_face_names = [
+    "Elbek Keskinoglu \
+    AKA The owner"
+]
+def speak(audio):
+    
+    engine = pyttsx3.init()
+    voices = engine.getProperty('voices')
+    
+    engine.setProperty('voice', voices[1].id)
+    engine.say(audio)
+    engine.runAndWait()
+
+face_locations = []
+face_encodings = []
+face_names = []
+endwait = []
+process_this_frame = True
+def takeCommand():
+
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        r.pause_threshold = 0.7
+        audio = r.listen(source)
+    
+        try:
+                        
+            Query = r.recognize_google(audio, language='en-in')
+            print(Query)
+        except Exception as e:
+            print(e)
+            return "None"
+        
+        return Query
+
+
+
+
+
+def tellDay():
+    day = datetime.datetime.today().weekday() + 1
+    Day_dict = {1: 'Monday', 2: 'Tuesday',
+                3: 'Wednesday', 4: 'Thursday',
+                5: 'Friday', 6: 'Saturday',
+                7: 'Sunday'}
+    
+    if day in Day_dict.keys():
+        day_of_the_week = Day_dict[day]
+        print(day_of_the_week)
+        speak("The day is " + day_of_the_week)
+
+
+def tellTime():
+    time = str(datetime.datetime.now())
+    print(time)
+    hour = time[11:13]
+    min = time[14:16]
+    speak(self, "The time is" + hour + "Hours and" + min + "Minutes")
+while(True):
+    ret, frame = video_capture.read()
+    small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+    rgb_small_frame = small_frame[:, :, ::-1]
+    if process_this_frame:
+        face_locations = face_recognition.face_locations(rgb_small_frame)
+        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+        
+        for face_encoding in face_encodings:
+            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+            if True in matches:
+                first_match_index = matches.index(True)
+                name = known_face_names[first_match_index]
+                speak("Hello Sir, I am Mrs Clarke. How can I help you")
+                var = 8                    
+                while var > 0:              
+                   var = var -1
+                   if var == 0:
+                       process_this_frame = False
+                       def Take_query():    
+                           while(True):
+                               query = takeCommand().lower()
+                               if "google" in query:
+                                   speak("Opening Google ")
+                                   webbrowser.open("www.google.com")
+                                   continue
+                               if "how life is going on" in query:
+                                   speak(" I am glad, since I can see you!")
+                               elif "hello" in query:
+                                   speak("Nice to see you the owner!")
+                                   continue
+                               elif "day" in query:
+                                   tellDay()
+                                   continue
+                               if "mrs" in query:
+                                   query = query.replace("mrs", "")
+                               elif "time" in query:
+                                   time = datetime.datetime.now().strftime('%I:%M %p')
+                                   speak('Current time is ' + time)
+                                   continue
+                               elif "thanks" in query:
+                                   speak("It is my pleasure sir!" )
+                                   exit()
+                               elif "bye" in query:
+                                   speak("Have a lovely day!")
+                                   exit()
+                               elif "wikipedia" in query:
+                                   speak("Checking the wikipedia ")
+                                   query = query.replace("wikipedia", "")
+                                   result = wikipedia.summary(query, sentences=4)
+                                   speak("According to wikipedia")
+                                   speak(result)
+                               elif "name" in query:
+                                   speak("I am Mrs Clarke. I am an English cryptanalyst, who was the dearest friend of Alan Turing")
+                               elif "play" in query:
+                                   song = query.replace('play', '')
+                                   speak('playing' + song)
+                                   pywhatkit.playonyt(song)
+                       if __name__ == '__main__':
+                           Take_query()
+            else:
+                speak("You are the unknown, bye!")
+                exit()
+
+
+
+video_capture.release()
+cv2.destroyAllWindows()
