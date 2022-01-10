@@ -5,10 +5,13 @@ import datetime
 import wikipedia
 import pywhatkit
 import face_recognition
-import face_recognition
 import cv2
 import numpy as np
 import time
+from geopy.geocoders import Nominatim
+import requests, json
+from geopy import distance
+from geopy.distance import geodesic
 
 video_capture = cv2.VideoCapture(0)
 owner_image = face_recognition.load_image_file("WIN_20220107_08_19_42_Pro.jpg")
@@ -16,10 +19,7 @@ owner_face_encoding = face_recognition.face_encodings(owner_image)[0]
 known_face_encodings = [
     owner_face_encoding,
 ]
-known_face_names = [
-    "Elbek Keskinoglu \
-    AKA The owner"
-]
+known_face_names = ('Elbek Keskinoglu')
 def speak(audio):
     
     engine = pyttsx3.init()
@@ -74,6 +74,11 @@ def tellTime():
     hour = time[11:13]
     min = time[14:16]
     speak(self, "The time is" + hour + "Hours and" + min + "Minutes")
+
+key = 'AIzaSyDKdfJoMkyAoPtldW9b80CWTOZjIa13Hsk'
+geolocator = Nominatim(user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36')
+location = geolocator.geocode('SÜMKO')
+loc = (location.latitude, location.longitude)
 while(True):
     ret, frame = video_capture.read()
     small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
@@ -87,7 +92,9 @@ while(True):
             if True in matches:
                 first_match_index = matches.index(True)
                 name = known_face_names[first_match_index]
-                speak("Hello Sir, I am Mrs Clarke. How can I help you")
+                speak("Hello Sir, I am Mrs Clarke. How can I help you")                
+                video_capture.release()
+                cv2.destroyAllWindows()
                 var = 8                    
                 while var > 0:              
                    var = var -1
@@ -100,6 +107,13 @@ while(True):
                                    speak("Opening Google ")
                                    webbrowser.open("www.google.com")
                                    continue
+                               if "i want to go to" in query:
+                                   dest = query.replace('i want to go to', '')
+                                   speak("Distance is in kilometers")
+                                   dest = geolocator.geocode(dest)
+                                   dest = (dest.latitude, dest.longitude)
+                                   dist = np.round_(geodesic(loc, dest).km)
+                                   speak(dist)
                                if "how life is going on" in query:
                                    speak(" I am glad, since I can see you!")
                                elif "hello" in query:
@@ -127,7 +141,11 @@ while(True):
                                    speak("According to wikipedia")
                                    speak(result)
                                elif "name" in query:
+                                   speak("I am Mrs Clarke.")
+                               elif "who are you" in query:
                                    speak("I am Mrs Clarke. I am an English cryptanalyst, who was the dearest friend of Alan Turing")
+                               elif "talk about yourself" in query:
+                                   speak("My name is Joan Elisabeth Lowther Murray, MBE, lived between 24 June 1917 and 4 September 1996. I was an English cryptanalyst and numismatist best known for work as a code-breaker at Bletchley Park during the Second World War. Although I did not personally seek the spotlight, my role in the Enigma project that decrypted Nazi Germany's secret communications earned me awards and citations, such as appointment as a Member of the Order of the British Empire (MBE), in 1946.")
                                elif "play" in query:
                                    song = query.replace('play', '')
                                    speak('playing' + song)
@@ -137,8 +155,3 @@ while(True):
             else:
                 speak("You are the unknown, bye!")
                 exit()
-
-
-
-video_capture.release()
-cv2.destroyAllWindows()
