@@ -12,7 +12,18 @@ from geopy.geocoders import Nominatim
 import requests, json
 from geopy import distance
 from geopy.distance import geodesic
+from kivy.app import App
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.label import Label
+from kivy.uix.image import Image
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
 
+class Mrs(App):
+    def build(self):
+        return Label(text = 'Patriot')
+if __name__ == "__main__":
+    Mrs().run()
 video_capture = cv2.VideoCapture(0)
 owner_image = face_recognition.load_image_file("WIN_20220107_08_19_42_Pro.jpg")
 owner_face_encoding = face_recognition.face_encodings(owner_image)[0]
@@ -74,10 +85,11 @@ def tellTime():
     hour = time[11:13]
     min = time[14:16]
     speak(self, "The time is" + hour + "Hours and" + min + "Minutes")
-
-key = 'AIzaSyDKdfJoMkyAoPtldW9b80CWTOZjIa13Hsk'
+HOUR        = datetime.datetime.now().hour
+MINUTE      = datetime.datetime.now().minute + 2
+api_key=('0eU9u1Zvdh8jRYeTOhMtPAUsO09J4m6b')
 geolocator = Nominatim(user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36')
-location = geolocator.geocode('SÜMKO')
+location = geolocator.geocode('34736 Kadıköy/İstanbul, Turkey')
 loc = (location.latitude, location.longitude)
 while(True):
     ret, frame = video_capture.read()
@@ -109,11 +121,9 @@ while(True):
                                    continue
                                if "i want to go to" in query:
                                    dest = query.replace('i want to go to', '')
-                                   speak("Distance is in kilometers")
-                                   dest = geolocator.geocode(dest)
-                                   dest = (dest.latitude, dest.longitude)
-                                   dist = np.round_(geodesic(loc, dest).km)
-                                   speak(dist)
+                                   url = 'http://google.nl/maps/place/' + dest + '/&amp;'
+                                   webbrowser.get().open(url)
+                                   speak('I found that' + dest)
                                if "how life is going on" in query:
                                    speak(" I am glad, since I can see you!")
                                elif "hello" in query:
@@ -134,6 +144,9 @@ while(True):
                                elif "bye" in query:
                                    speak("Have a lovely day!")
                                    exit()
+                               if 'it is an emergency' in query:
+                                   pywhatkit.sendwhatmsg_to_group("Keskinoglu Malikanesi", "Beni kontrol edin", HOUR, MINUTE)
+                                   continue
                                elif "wikipedia" in query:
                                    speak("Checking the wikipedia ")
                                    query = query.replace("wikipedia", "")
@@ -155,3 +168,4 @@ while(True):
             else:
                 speak("You are the unknown, bye!")
                 exit()
+
