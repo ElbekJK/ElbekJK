@@ -8,34 +8,25 @@ import face_recognition
 import cv2
 import numpy as np
 import time
-from geopy.geocoders import Nominatim
+from ibm_watson import TextToSpeechV1
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 import requests, json
-from geopy import distance
-from geopy.distance import geodesic
-from kivy.app import App
-from kivy.uix.gridlayout import GridLayout
-from kivy.uix.label import Label
-from kivy.uix.image import Image
-from kivy.uix.button import Button
-from kivy.uix.textinput import TextInput
-
-class Mrs(App):
-    def build(self):
-        return Label(text = 'Patriot')
-if __name__ == "__main__":
-    Mrs().run()
 video_capture = cv2.VideoCapture(0)
 owner_image = face_recognition.load_image_file("WIN_20220107_08_19_42_Pro.jpg")
 owner_face_encoding = face_recognition.face_encodings(owner_image)[0]
 known_face_encodings = [
     owner_face_encoding,
 ]
+apikey = 'key'
+url = 'url' 
+authenticator = IAMAuthenticator(apikey)
+tts = TextToSpeechV1(authenticator=authenticator)
+tts.set_service_url(url)
 known_face_names = ('Elbek Keskinoglu')
 def speak(audio):
     
     engine = pyttsx3.init()
     voices = engine.getProperty('voices')
-    
     engine.setProperty('voice', voices[1].id)
     engine.say(audio)
     engine.runAndWait()
@@ -52,15 +43,13 @@ def takeCommand():
         r.pause_threshold = 0.7
         audio = r.listen(source)
     
-        try:
-                        
-            Query = r.recognize_google(audio, language='en-in')
-            print(Query)
-        except Exception as e:
-            print(e)
-            return "None"
-        
-        return Query
+    try:
+        Query = r.recognize_ibm(audio, username='mail', password = 'password', language = 'en-GB_KateV3Voice') 
+        print(Query)
+    except sr.UnknownValueError:
+        speak('Can you repeat please?')
+        Query = str(input('Query:'))
+    return Query
 
 
 
@@ -87,10 +76,6 @@ def tellTime():
     speak(self, "The time is" + hour + "Hours and" + min + "Minutes")
 HOUR        = datetime.datetime.now().hour
 MINUTE      = datetime.datetime.now().minute + 2
-api_key=('0eU9u1Zvdh8jRYeTOhMtPAUsO09J4m6b')
-geolocator = Nominatim(user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36')
-location = geolocator.geocode('34736 Kadıköy/İstanbul, Turkey')
-loc = (location.latitude, location.longitude)
 while(True):
     ret, frame = video_capture.read()
     small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
@@ -144,7 +129,7 @@ while(True):
                                elif "bye" in query:
                                    speak("Have a lovely day!")
                                    exit()
-                               if 'it is an emergency' in query:
+                               if 'SOS' in query:
                                    pywhatkit.sendwhatmsg_to_group("Keskinoglu Malikanesi", "Beni kontrol edin", HOUR, MINUTE)
                                    continue
                                elif "wikipedia" in query:
